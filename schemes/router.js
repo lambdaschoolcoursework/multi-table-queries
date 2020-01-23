@@ -1,116 +1,62 @@
 const express = require('express');
-const db = require('../data/config');
+const db = require('./model');
 
 const app = express.Router();
 
-app.get('/', (req, res) => {
+// fetch all schemes
+app.get('/', (request, response) => {
     db.find()
-		.then(schemes => {
-			res.json(schemes);
-		})
-		.catch(err => {
-			res.status(500).json({ message: 'Failed to get schemes' });
-		});
+		.then(res => response.status(200).json(res))
+		.catch(err => response.status(500).json({message: 'error fetching schemes'}));
 });
-  
-app.get('/:id', (req, res) => {
-    const { id } = req.params;
-  
-    db.findById(id)
-		.then(scheme => {
-			if (scheme) {
-				res.json(scheme);
-			} else {
-				res.status(404).json({ message: 'Could not find scheme with given id.' })
-			};
-		})
-		.catch(err => {
-			res.status(500).json({ message: 'Failed to get schemes' });
-		});
+
+// fetch scheme
+app.get('/:id', (request, response) => {
+    db.findById(request.params.id)
+		.then(res => res ? response.status(200).json(res) : response.status(404).json({message: 'scheme with specified id does not exist'}))
+		.catch(err => response.status(500).json({message: 'error fetching scheme'}));
 });
-  
-app.get('/:id/steps', (req, res) => {
-    const { id } = req.params;
-  
-    db.findSteps(id)
-		.then(steps => {
-			if (steps.length) {
-				res.json(steps);
-			} else {
-				res.status(404).json({ message: 'Could not find steps for given scheme' })
-			};
-		})
-		.catch(err => {
-			res.status(500).json({ message: 'Failed to get steps' });
-		});
+
+// fetch scheme's steps
+app.get('/:id/steps', (request, response) => {
+    db.findSteps(request.params.id)
+		.then(res => res.length ? response.status(200).json(res) : response.status(404).json({message: 'scheme with specified id does not exist'}))
+		.catch(err => response.status(500).json({message: 'error fetching steps'}));
 });
-  
-app.post('/', (req, res) => {
-    const schemeData = req.body;
-  
-    db.add(schemeData)
-		.then(scheme => {
-			res.status(201).json(scheme);
-		})
-		.catch (err => {
-			res.status(500).json({ message: 'Failed to create new scheme' });
-		});
+
+// create scheme
+app.post('/', (request, response) => {
+    db.add(request.body)
+		.then(res => response.status(201).json(res))
+		.catch (err => response.status(500).json({message: 'error creating scheme'}));
 });
-  
-app.post('/:id/steps', (req, res) => {
-    const stepData = req.body;
-    const { id } = req.params; 
-  
-    db.findById(id)
-		.then(scheme => {
-			if (scheme) {
-				db.addStep(stepData, id)
-					.then(step => {
-						res.status(201).json(step);
-					})
-			} else {
-				res.status(404).json({ message: 'Could not find scheme with given id.' })
-			};
-		})
-		.catch (err => {
-			res.status(500).json({ message: 'Failed to create new step' });
-		});
+
+// create step
+app.post('/:id/steps', (request, response) => { 
+    db.findById(request.params.id)
+		.then(res => res ? (
+			db.addStep(request.body, request.params.id)
+				.then(r => response.status(200).json(r))
+		) : res.status(404).json({message: 'scheme with specified id not found'}))
+		.catch (err => response.status(500).json({message: 'error fetching step'}));
 });
-  
-app.put('/:id', (req, res) => {
-    const { id } = req.params;
-    const changes = req.body;
-  
-    db.findById(id)
-		.then(scheme => {
-			if (scheme) {
-				db.update(changes, id)
-					.then(updatedScheme => {
-						res.json(updatedScheme);
-					});
-			} else {
-				res.status(404).json({ message: 'Could not find scheme with given id' });
-			};
-		})
-		.catch (err => {
-			res.status(500).json({ message: 'Failed to update scheme' });
-		});
+
+// update scheme
+app.put('/:id', (request, response) => {
+    db.findById(request.params.id)
+		.then(res => res ? (
+			db.update(request.body, request.params.id)
+				.then(r => response.status(200).json(r))
+				.catch(e => response.status(500).json({message: 'error updating scheme'}))
+		) : response.status(404).json({message: 'scheme with specified id not found'}))
+		.catch (err => response.status(500).json({message: 'error fetching scheme'}));
 });
-  
-app.delete('/:id', (req, res) => {
-    const { id } = req.params;
-  
-    db.remove(id)
-		.then(deleted => {
-			if (deleted) {
-				res.json({ removed: deleted });
-			} else {
-				res.status(404).json({ message: 'Could not find scheme with given id' });
-			};
-		})
-		.catch(err => {
-			res.status(500).json({ message: 'Failed to delete scheme' });
-		});
+
+// delete scheme
+app.delete('/:id', (request, response) => {
+    db.remove(request.params.id)
+		.then(res => res ? response.status(200).json({message: 'successfully deleted scheme'}) : response.status(404).json({message: 'scheme with specified id does not exist'}))
+		.catch(err => response.status(500).json({message: 'error deleting scheme'}));
 });
 
 module.exports = app;
