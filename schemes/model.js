@@ -20,7 +20,7 @@ const add = scheme => {
 };
 
 const addStep = (step, id) => {
-    return db('steps').insert(step);
+    return db('steps').insert({step_number: step.step_number, instructions: step.instructions, scheme_id: id});
 };
 
 const update = (scheme, id) => {

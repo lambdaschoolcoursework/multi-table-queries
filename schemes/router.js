@@ -38,7 +38,7 @@ app.post('/:id/steps', (request, response) => {
 			db.addStep(request.body, request.params.id)
 				.then(r => response.status(200).json(r))
 		) : res.status(404).json({message: 'scheme with specified id not found'}))
-		.catch (err => response.status(500).json({message: 'error fetching step'}));
+		.catch (err => response.status(500).json({message: 'error fetching scheme'}));
 });
 
 // update scheme
